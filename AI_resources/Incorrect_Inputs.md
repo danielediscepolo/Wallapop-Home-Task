@@ -18,7 +18,7 @@ such as `PS5` can be useful, while a longer sentence can still be meaningless.
 
 | Seller input or action | Intended behaviour |
 | --- | --- |
-| Empty or whitespace-only description | Do not allow generation. |
+| Empty or whitespace-only description | Return `INVALID_DESCRIPTION`; do not call the model. Implemented in the backend. |
 | Description over the maximum length | Preserve the text, show the limit clearly, and do not allow generation until corrected. |
 | Short but identifiable product | Generate suggestions; use the limited-information tip when appropriate. |
 | Identifiable product missing relevant details | Generate all suggestions and warn that the price is especially approximate. |
@@ -46,6 +46,10 @@ such as `PS5` can be useful, while a longer sentence can still be meaningless.
   consistent set of product states.
 - Treat insufficient input differently from technical failures.
 
+The first implemented validation deliberately covers missing, non-string, empty,
+and whitespace-only descriptions with HTTP 400. Broader semantic input quality
+remains an application outcome rather than part of this basic HTTP check.
+
 ## Deliberately not designed yet
 
 - marketplace policy enforcement for prohibited products;
@@ -54,4 +58,3 @@ such as `PS5` can be useful, while a longer sentence can still be meaningless.
 - a numeric confidence score;
 - persistence across page refreshes;
 - exact multilingual behaviour.
-

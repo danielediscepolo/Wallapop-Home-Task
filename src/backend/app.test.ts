@@ -1,5 +1,5 @@
 import request from "supertest";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { createApp } from "./app";
 import { validMockModel } from "./mockModel";
@@ -29,5 +29,23 @@ describe("POST /api/listing-suggestions", () => {
     expect(response.body.priceRange.min).toBeLessThanOrEqual(
       response.body.priceRange.max,
     );
+  });
+
+  it("rejects a blank description without calling the model", async () => {
+    const generateModelOutput = vi.fn(async () => undefined);
+    const app = createApp(generateModelOutput);
+
+    const response = await request(app)
+      .post("/api/listing-suggestions")
+      .send({ description: "   " });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      error: {
+        code: "INVALID_DESCRIPTION",
+        message: "Description is required.",
+      },
+    });
+    expect(generateModelOutput).not.toHaveBeenCalled();
   });
 });

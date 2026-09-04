@@ -109,6 +109,12 @@ Trade-offs:
 - The benefit is one test syntax, command style, and reporting flow across the
   application.
 
+Test files initially stay beside the code they exercise. A small endpoint suite
+remains in one file and is grouped by behaviour with `describe` blocks. When a
+behaviour grows to several cases, it can move to a focused file such as
+`app.input-validation.test.ts` or `app.model-errors.test.ts`. Regression tests
+remain with the behaviour they protect rather than in a generic regression file.
+
 ## Request flow
 
 The high-level flow is:
@@ -196,7 +202,8 @@ documented honestly.
 
 ## Other open decisions
 
-- exact HTTP request and response contract;
+- the remainder of the HTTP response contract beyond the first success response
+  and the `INVALID_DESCRIPTION` error;
 - runtime validation approach;
 - AI provider and model;
 - prompt and structured-output strategy;
@@ -216,3 +223,9 @@ introduced.
 Split responsibilities only when the next behaviour produces a clear boundary;
 do not keep adding parsing, validation, provider error mapping, and prompt logic
 to one growing function.
+
+Basic request-shape validation currently belongs to the Express route. The first
+rule rejects a missing, non-string, empty, or whitespace-only `description` with
+HTTP 400 before model access. This placement keeps HTTP input concerns out of the
+generation function; revisit the validation mechanism only if the request shape
+grows enough to justify a schema library or dedicated module.

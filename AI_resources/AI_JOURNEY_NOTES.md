@@ -446,3 +446,44 @@ We decided not to refactor speculatively before the next behaviour. Instead, thi
 is recorded as an explicit watchpoint: input validation and invalid model-output
 handling must not turn the function into a catch-all. The next tests should reveal
 whether parsing and validation deserve their own focused unit.
+
+## 2026-09-04 - Rejecting a blank seller description
+
+### Behaviour specified
+
+An empty or whitespace-only description is an invalid HTTP request. `POST
+/api/listing-suggestions` must return HTTP 400 with the stable error code
+`INVALID_DESCRIPTION` and must not call the model gateway.
+
+The user and AI chose a direct `typeof` and `trim` check in the Express route. A
+runtime-schema library was not introduced for this single field because its cost
+is not yet justified. Trimming is used only to validate the value, not to rewrite
+the seller's original description.
+
+### Red phase
+
+The new endpoint test received HTTP 200 instead of 400, confirming that the
+existing route passed whitespace directly into the generation flow.
+
+### Green phase
+
+The route now rejects missing, non-string, empty, and whitespace-only
+descriptions before calling the model. Both endpoint tests pass and `tsc
+--noEmit` completes without errors.
+
+### Scope decision
+
+This increment covers only obviously blank input. Semantically insufficient input
+and invalid model output remain separate behaviours to introduce with their own
+tests. With one valid and one invalid-request path working, the next increment can
+start exposing the flow in the frontend without pretending the backend is
+complete.
+
+### Test organisation decision
+
+The user proposed separating happy-path, input-handling, advanced-function, and
+regression tests into different test files, following experience with JUnit. We
+agreed on behaviour-based separation as suites grow, but not on creating files
+that would currently contain only one test. Small suites stay co-located and use
+`describe` groups; focused function tests get their own file, and regression
+tests stay beside the behaviour they protect.
