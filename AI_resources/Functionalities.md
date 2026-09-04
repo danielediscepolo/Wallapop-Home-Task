@@ -39,6 +39,11 @@ The first working version should include only:
 - clear indication that the price is an estimate;
 - preservation of the seller's description throughout the interaction.
 
+Implementation progress: the minimal React interface now covers the description
+field, generate action, loading state, blank-input feedback, and rendering of a
+complete mocked result. Copying, editing, regeneration, limited-information
+guidance, and malformed-model handling remain later increments.
+
 ## Expected product outcomes
 
 ### Complete information
@@ -106,4 +111,3 @@ should not build a generic category or form system before one is needed.
 - what happens to existing suggestions when the description changes;
 - the precise edit and regeneration interactions;
 - the API contract, validation rules, stack, provider, and test strategy.
-

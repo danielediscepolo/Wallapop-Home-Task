@@ -487,3 +487,56 @@ agreed on behaviour-based separation as suites grow, but not on creating files
 that would currently contain only one test. Small suites stay co-located and use
 `describe` groups; focused function tests get their own file, and regression
 tests stay beside the behaviour they protect.
+
+## 2026-09-04 - First minimal frontend slice
+
+### Objective
+
+Expose the two implemented behaviours in a minimal seller interface: reject a
+blank description immediately and display complete suggestions for a valid one.
+
+### Decisions
+
+The user chose frontend validation for fast feedback while keeping the backend as
+the source of truth. A blank submit therefore shows `Description is required.`
+without making a request, while the API independently enforces the same rule for
+other clients.
+
+For testing, the user selected React Testing Library with jsdom instead of manual
+testing only or a full Playwright setup. The component tests exercise accessible
+controls and visible outcomes rather than component internals. The HTTP call and
+its types live in a small separate module so the component remains focused on UI
+state and rendering.
+
+### Red phase
+
+The first frontend run failed because `App.tsx` did not exist. This was the
+expected initial failure after specifying the two behaviours.
+
+### Unexpected test setup issue
+
+After the first implementation, the blank-input test passed but the valid-input
+test found duplicate copies of the interface. Automatic cleanup was not active in
+the current Vitest setup, so rendered DOM leaked between tests and created
+duplicate IDs. Adding explicit React Testing Library `cleanup()` in `afterEach`
+fixed the isolation issue.
+
+### Verification
+
+- two backend and two frontend tests pass;
+- `tsc --noEmit` passes after adding Vite's CSS import type reference;
+- the production Vite build succeeds;
+- Vite and the mock-backed Express server run together through one development
+  command;
+- desktop and narrow-layout screenshots were inspected without finding overlaps.
+
+The first sandboxed development-server attempt caused `tsx` to fail while reading
+Windows user information. Running the same command with normal local permissions
+started both processes successfully, showing that this was an execution-environment
+constraint rather than an application failure.
+
+### Scope kept open
+
+The development server currently selects the valid mock directly. Environment
+selection between valid mock, invalid mock, and a real provider remains a later
+backend behaviour and was not folded into this UI increment.

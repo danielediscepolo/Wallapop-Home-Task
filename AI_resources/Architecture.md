@@ -115,6 +115,10 @@ behaviour grows to several cases, it can move to a focused file such as
 `app.input-validation.test.ts` or `app.model-errors.test.ts`. Regression tests
 remain with the behaviour they protect rather than in a generic regression file.
 
+Frontend behaviour tests use React Testing Library, `user-event`, and jsdom under
+the same Vitest runner. They query accessible labels and visible results rather
+than component implementation details.
+
 ## Request flow
 
 The high-level flow is:
@@ -130,6 +134,15 @@ Seller
   -> application result
   -> React UI
 ```
+
+During local development, Vite proxies `/api` to the Express server on port 3001.
+The two processes start through one npm command. This keeps provider access on the
+backend while avoiding CORS configuration for the local single-page application.
+
+The frontend keeps request code and API-facing types in a small module separate
+from the React component. React local state owns the description, field error,
+request error, loading flag, and current result; no shared state library is
+needed.
 
 This is a responsibility map, not a commitment to one file or class per line.
 
