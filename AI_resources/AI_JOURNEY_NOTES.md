@@ -280,3 +280,98 @@ Create two working references under `AI_resources`:
 
 These files support implementation and memory. They do not replace the
 chronological decision record in this document or the final `AI_JOURNEY.md`.
+
+## 2026-09-04 - Selecting the initial technology stack
+
+### Problem
+
+Choose among the frontend and backend technologies allowed by the assignment
+while prioritising simplicity, future modification, testing, and the ability to
+explain and change the application live.
+
+### Alternatives discussed
+
+- React and Node.js with TypeScript throughout;
+- Angular and Node.js with TypeScript;
+- React and a Kotlin/Ktor backend.
+
+The AI recommended React, Vite, Node.js, Express, and TypeScript. It also compared
+a single npm project with separated source folders against two independent npm
+projects.
+
+### User decision
+
+The user accepted the JavaScript ecosystem for this assignment despite not
+personally liking JavaScript very much. The reduced context switching and lower
+setup cost were considered more important here than language preference.
+
+The user also selected one npm project with source code separated into:
+
+```text
+src/
+  frontend/
+  backend/
+```
+
+### Reason and trade-off
+
+React and Node.js keep the implementation and live-modification workflow small,
+while TypeScript provides useful static contracts on both sides. Angular or
+Kotlin could offer more built-in structure, but would add concepts and tooling
+that the current one-screen, one-endpoint product does not need.
+
+The single-package layout reduces setup while preserving a visible frontend and
+backend boundary. It accepts some shared project configuration instead of the
+stronger isolation of two packages.
+
+### Next decision
+
+Define the AI boundary carefully. In particular, decide how real and mock model
+access can share the same parsing and validation path so that malformed mock
+output tests the real trust boundary rather than bypassing it.
+
+## 2026-09-04 - Confirming the AI trust boundary
+
+### Clarification needed
+
+The phrase `untrusted output` initially caused confusion. It sounded as though
+the application had to choose between supporting valid output and supporting the
+required broken mock output.
+
+### Clarification reached
+
+`Untrusted` is the state of every raw model payload before validation, not a
+separate response mode. Real and mock generation can each produce valid or
+invalid data. Valid application outcomes include complete suggestions, limited
+information with a warning, and a request for more information. Malformed data or
+impossible field combinations are invalid model output.
+
+### Decision
+
+- Mock mode replaces only model access.
+- Real and mock payloads go through the same parser and validator.
+- Mock mode must run the whole application without an API key.
+- Mock configuration must reproduce a valid payload and an invalid payload.
+- Parsing uses structural checks and small deterministic domain invariants.
+- Do not add a second AI judge or a speculative semantic rules engine.
+
+### Reason and trade-off
+
+This boundary makes the failure simulation meaningful: malformed mock data tests
+the same trust boundary used in real mode. It adds one small function-level
+abstraction, justified by the explicit real/mock requirement. Deterministic
+validation cannot detect every plausible but irrelevant AI answer, and that
+limitation is accepted rather than hidden behind unreliable heuristics.
+
+### Proposed implementation sequence
+
+1. Build the smallest end-to-end flow with a valid mock payload.
+2. Add shared parsing and validation.
+3. Add the invalid mock scenario and its user-facing behaviour.
+4. Add the real provider behind the same boundary.
+
+### Milestone
+
+The architectural direction is now sufficiently defined to begin incremental,
+behaviour-first implementation. API details, validation tooling, provider choice,
+and tests will be decided when their first concrete behaviour is introduced.
