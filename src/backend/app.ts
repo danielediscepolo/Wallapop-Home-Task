@@ -2,6 +2,7 @@ import express from "express";
 
 import { generateListingSuggestions } from "./generateListingSuggestions";
 import type { GenerateModelOutput } from "./modelGateway";
+import { InvalidModelOutputError } from "./parseListingSuggestions";
 
 export function createApp(generateModelOutput: GenerateModelOutput) {
   const app = express();
@@ -28,6 +29,17 @@ export function createApp(generateModelOutput: GenerateModelOutput) {
 
       response.status(200).json(result);
     } catch (error) {
+      if (error instanceof InvalidModelOutputError) {
+        response.status(502).json({
+          error: {
+            code: "INVALID_MODEL_OUTPUT",
+            message:
+              "We couldn't generate reliable suggestions. Please try again.",
+          },
+        });
+        return;
+      }
+
       next(error);
     }
   });

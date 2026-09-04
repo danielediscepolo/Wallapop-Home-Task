@@ -15,6 +15,27 @@ In order:
 
 The target is a clear 4-6 hour solution, not a compressed enterprise platform.
 
+## Modularity rule
+
+Separate code by reason to change and introduce abstractions only at boundaries
+that have more than one required implementation or isolate an external system.
+Domain code is expected to know about listing suggestions; making it generic
+would hide the product rather than improve reuse.
+
+Applied boundaries:
+
+- `GenerateModelOutput` is injected because real and mock model access are both
+  required;
+- model-output parsing is a dedicated pure function because it protects the
+  external-data trust boundary;
+- the listing-suggestions contract is shared by backend and frontend so their
+  compile-time types cannot drift;
+- frontend HTTP access is separate from React rendering.
+
+The parser itself is not injected because there is only one validation policy.
+Routes and use cases remain concrete. No dependency-injection container, generic
+provider framework, or repository layer is introduced.
+
 ## Confirmed technology choices
 
 ### Language
@@ -212,6 +233,17 @@ score, or a second AI call to judge the first response. A plausible but
 semantically unrelated response cannot be detected perfectly by deterministic
 validation; prompt constraints reduce this risk, and the limitation should be
 documented honestly.
+
+The implemented parser currently accepts the `complete` outcome and enforces a
+non-empty title, 3-5 non-empty case-insensitively unique tags, and a finite,
+non-negative, ordered EUR price range. It accepts either a JSON string or an
+already-decoded unknown value and always returns the shared application type.
+
+Malformed JSON or a structurally invalid value raises a focused
+`InvalidModelOutputError`. The Express route maps only that known failure to HTTP
+502 and the stable `INVALID_MODEL_OUTPUT` code; unrelated failures continue to
+the normal Express error path so future provider errors are not accidentally
+misclassified.
 
 ## Other open decisions
 

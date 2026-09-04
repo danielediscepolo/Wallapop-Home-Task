@@ -1,9 +1,7 @@
 import { useState, type FormEvent } from "react";
 
-import {
-  requestListingSuggestions,
-  type ListingSuggestions,
-} from "./listingSuggestionsApi";
+import { requestListingSuggestions } from "./listingSuggestionsApi";
+import type { ListingSuggestions } from "../shared/listingSuggestions";
 
 const REQUIRED_DESCRIPTION_MESSAGE = "Description is required.";
 

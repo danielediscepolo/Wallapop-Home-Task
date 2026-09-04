@@ -48,4 +48,21 @@ describe("POST /api/listing-suggestions", () => {
     });
     expect(generateModelOutput).not.toHaveBeenCalled();
   });
+
+  it("returns a stable error when the model output is invalid", async () => {
+    const invalidModel = async () => "{not-json";
+    const app = createApp(invalidModel);
+
+    const response = await request(app)
+      .post("/api/listing-suggestions")
+      .send({ description: "Renault Twingo" });
+
+    expect(response.status).toBe(502);
+    expect(response.body).toEqual({
+      error: {
+        code: "INVALID_MODEL_OUTPUT",
+        message: "We couldn't generate reliable suggestions. Please try again.",
+      },
+    });
+  });
 });

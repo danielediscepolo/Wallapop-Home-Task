@@ -540,3 +540,41 @@ constraint rather than an application failure.
 The development server currently selects the valid mock directly. Environment
 selection between valid mock, invalid mock, and a real provider remains a later
 backend behaviour and was not folded into this UI increment.
+
+## 2026-09-04 - Making the AI boundary modular and trustworthy
+
+### User direction
+
+Before adding the real provider, the user emphasised that the code should depend
+on useful abstractions and remain modular, without becoming generic or dominated
+by dependencies that exist only for this task.
+
+### Decision
+
+Use abstractions only where change is already required. Model access keeps its
+injected function boundary because real and mock implementations must coexist.
+Output parsing becomes a concrete pure function, not another injected interface.
+The application result type moves to `src/shared` to remove the real risk of
+frontend and backend definitions diverging.
+
+A manual validator was chosen over adding a schema library. The output contract
+is currently small enough to keep its structural and domain checks explicit and
+easy to modify live.
+
+### TDD result
+
+The red run failed for the expected reasons: the parser module did not exist and
+malformed model JSON produced HTTP 500 instead of the chosen 502 response. The
+implementation then added the shared contract, parser, focused error type, and
+route mapping.
+
+Parser tests cover valid output, malformed JSON, blank titles, invalid tag counts,
+case-insensitive duplicate tags, inverted prices, and unsupported currency. The
+endpoint test protects the stable `INVALID_MODEL_OUTPUT` response. All 12 tests,
+the TypeScript check, and the production frontend build pass.
+
+### Useful correction
+
+After moving the result type, TypeScript detected that the React component still
+imported it through the HTTP module. Importing the type directly from the shared
+contract completed the intended dependency direction without adding a re-export.
