@@ -375,3 +375,74 @@ limitation is accepted rather than hidden behind unreliable heuristics.
 The architectural direction is now sufficiently defined to begin incremental,
 behaviour-first implementation. API details, validation tooling, provider choice,
 and tests will be decided when their first concrete behaviour is introduced.
+
+## 2026-09-04 - First backend behaviour with a valid mock
+
+### Objective
+
+Build the smallest backend behaviour for a valid seller description using mock
+model output, following a lightweight red-green TDD cycle.
+
+### Testing decision
+
+The user accepted Vitest as the common test runner for backend and future React
+tests. Supertest is used only as an HTTP helper for exercising the Express app in
+memory. The user considered the extra development dependencies worthwhile because
+one runner reduces overall project complexity.
+
+Type checking remains a separate command because Vitest transforms TypeScript but
+does not replace `tsc` static analysis.
+
+### Behaviour specified
+
+Given a valid description and the valid mock model, `POST
+/api/listing-suggestions` returns HTTP 200 with:
+
+- status `complete`;
+- a non-empty title;
+- 3-5 unique tags;
+- a numeric EUR price range whose minimum is not greater than its maximum.
+
+The test protects the response behaviour and invariants rather than the exact
+wording of the deterministic mock title.
+
+### Red phase
+
+The first test run failed because `src/backend/app.ts` did not exist. Vitest
+started correctly and reported the missing application module, which was the
+expected reason for failure before implementation.
+
+### Minimal implementation
+
+The implementation added:
+
+- an Express application exposing the single route;
+- a small application function coordinating generation;
+- a function-level model gateway type;
+- a valid mock model returning a raw JSON payload.
+
+The implementation intentionally does not yet include runtime input validation,
+invalid model-output validation, environment-based model selection, or a listening
+server. Those behaviours will be introduced only with their corresponding tests.
+
+### Green phase
+
+The endpoint test passed, and `tsc --noEmit` completed without errors.
+
+### Lesson
+
+Separating the Express application from the listening process made the first HTTP
+behaviour testable without a real port. Returning raw JSON from the mock also
+preserved the agreed trust boundary for the next parsing and validation step.
+
+### User review before committing
+
+The user accepted the first slice but flagged that some units already appear to
+carry several responsibilities. The current code uses functions rather than
+classes, but the concern applies particularly to `generateListingSuggestions`,
+which currently builds a prompt, calls the gateway, and parses the response.
+
+We decided not to refactor speculatively before the next behaviour. Instead, this
+is recorded as an explicit watchpoint: input validation and invalid model-output
+handling must not turn the function into a catch-all. The next tests should reveal
+whether parsing and validation deserve their own focused unit.

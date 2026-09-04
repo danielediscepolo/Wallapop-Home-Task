@@ -91,6 +91,24 @@ file tree will be introduced incrementally rather than scaffolded in advance.
 - AI keys and provider-specific code never reach the frontend.
 - Mock mode is a first-class backend behaviour controlled by environment.
 
+## Confirmed test approach
+
+Use Vitest as the single test runner for backend and frontend code.
+
+- Backend tests run in a Node environment.
+- Supertest exercises the Express application in memory without opening a port.
+- Later frontend component tests can use the same runner with a DOM environment.
+- Type checking remains a separate `tsc --noEmit` command because Vitest
+  transforms TypeScript but does not perform full static type checking.
+
+Trade-offs:
+
+- Vitest and Supertest add development dependencies.
+- Supertest verifies Express routes and middleware but not the process listening
+  on a real network port.
+- The benefit is one test syntax, command style, and reporting flow across the
+  application.
+
 ## Request flow
 
 The high-level flow is:
@@ -184,5 +202,17 @@ documented honestly.
 - prompt and structured-output strategy;
 - environment variables for mock scenarios;
 - application and provider error mapping;
-- testing libraries and exact test boundaries;
+- frontend component-testing helper and exact later test boundaries;
 - development and production scripts.
+
+## Refactoring watchpoints
+
+The first vertical slice intentionally keeps some responsibilities together.
+`generateListingSuggestions` currently creates the prompt, calls the model
+gateway, and parses JSON. This is acceptable while there is only one successful
+path, but it must be reviewed as runtime validation and additional outcomes are
+introduced.
+
+Split responsibilities only when the next behaviour produces a clear boundary;
+do not keep adding parsing, validation, provider error mapping, and prompt logic
+to one growing function.
