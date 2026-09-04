@@ -31,27 +31,18 @@ textarea {
 .app-header {
   display: flex;
   align-items: center;
-  gap: 10px;
   min-height: 64px;
   padding: 0 32px;
   color: #ffffff;
   background: #17232b;
 }
 
-.brand-mark {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border-radius: 50%;
-  color: #17232b;
-  background: #13c1ac;
-  font-weight: 800;
-}
-
-.brand-name {
-  font-size: 1.15rem;
-  font-weight: 750;
+.brand-logo {
+  display: block;
+  width: 150px;
+  height: auto;
+  max-height: 42px;
+  object-fit: contain;
 }
 
 .workspace {

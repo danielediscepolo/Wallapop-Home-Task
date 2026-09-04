@@ -52,10 +52,11 @@ export function App() {
   return (
     <main className="app-shell">
       <header className="app-header">
-        <span className="brand-mark" aria-hidden="true">
-          w
-        </span>
-        <span className="brand-name">wallapop</span>
+        <img
+          className="brand-logo"
+          src="/wallapop-logo.png"
+          alt="Wallapop"
+        />
       </header>
 
       <section className="workspace" aria-labelledby="page-title">
