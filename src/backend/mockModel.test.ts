@@ -21,7 +21,7 @@ describe("selectMockModel", () => {
   it("selects the configured limited scenario", async () => {
     expect(selectMockModel("limited")).toBe(limitedMockModel);
 
-    const rawOutput = await limitedMockModel("");
+    const rawOutput = await limitedMockModel({ description: "" });
     expect(typeof rawOutput).toBe("string");
 
     if (typeof rawOutput !== "string") {
@@ -42,7 +42,7 @@ describe("selectMockModel", () => {
       needsMoreInformationMockModel,
     );
 
-    const rawOutput = await needsMoreInformationMockModel("");
+    const rawOutput = await needsMoreInformationMockModel({ description: "" });
     expect(typeof rawOutput).toBe("string");
 
     if (typeof rawOutput !== "string") {

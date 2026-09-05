@@ -6,8 +6,7 @@ export async function generateListingSuggestions(
   description: string,
   generateModelOutput: GenerateModelOutput,
 ): Promise<ListingSuggestions> {
-  const prompt = `Generate listing suggestions for: ${description}`;
-  const output = await generateModelOutput(prompt);
+  const output = await generateModelOutput({ description });
 
   return parseListingSuggestions(output);
 }

@@ -190,15 +190,20 @@ application generation -|
 model response is invalid. A valid payload becomes an application result only
 after it passes the common parser and deterministic checks.
 
-The boundary should remain a small function or TypeScript type rather than a
-class hierarchy. Conceptually:
+The boundary remains a small function type rather than a class hierarchy:
 
 ```ts
-type GenerateModelOutput = (prompt: string) => Promise<unknown>;
+type ListingGenerationInput = {
+  description: string;
+};
+
+type GenerateModelOutput = (
+  input: ListingGenerationInput,
+) => Promise<unknown>;
 ```
 
-The exact payload type may be refined after selecting the provider and structured
-output strategy.
+Prompt construction therefore belongs to each provider adapter rather than the
+application generation function.
 
 ### Responsibilities
 
@@ -226,14 +231,15 @@ distinct deterministic rule without creating a semantic classification engine.
 The development server selects the deterministic mock through
 `MOCK_SCENARIO=valid|limited|needs_more_information|invalid`. An absent value
 defaults to `valid`; an unsupported value fails immediately instead of silently
-selecting a scenario. Environment file loading and real-provider selection are
-not implemented yet.
+selecting a scenario. The backend development command optionally loads `.env`
+through Node's built-in `--env-file-if-exists` flag, so mock mode still starts
+when the ignored local file is absent.
 
 ### Confirmed real-provider direction
 
 Use Groq with the `openai/gpt-oss-20b` model. Its free tier allows the real AI
 path to be demonstrated without OpenAI API billing, and Groq documents support
-for the selected OpenAI-compatible JavaScript client and structured JSON output.
+for the selected OpenAI-compatible JavaScript client and JSON Object Mode.
 
 The provider will receive a small application-owned input object rather than a
 prebuilt provider prompt:
@@ -245,8 +251,25 @@ type ListingGenerationInput = {
 ```
 
 This keeps prompt construction inside the provider adapter. The frontend request
-remains `{ description }`, and provider selection will later use
-`MODEL_PROVIDER=mock|groq`. `GROQ_API_KEY` must remain backend-only.
+remains `{ description }`, and provider selection uses
+`MODEL_PROVIDER=mock|groq`. Mock is the default. Selecting Groq without a
+non-empty `GROQ_API_KEY` fails at startup instead of silently falling back to a
+mock; the key remains backend-only.
+
+The Groq adapter uses Chat Completions with JSON Object Mode. A strict JSON Schema
+was considered but rejected because it duplicated the existing runtime parser
+and required extra representation work for the three result variants. The prompt
+defines the expected variants, while the common parser remains the application
+trust boundary.
+
+The request uses `temperature: 0.5` and a fixed `seed: 42` to reduce variation
+between identical descriptions. The seed is treated as best-effort reproducibility,
+not a guarantee that outputs remain identical across provider or model changes.
+
+Price ranges are model estimates based on general learned knowledge, not live
+Wallapop listings or a comparable-sales data source. The prompt avoids claiming
+live market data, `limited` requests a wider range, and the UI labels every range
+as estimated.
 
 ### Validation scope
 
@@ -275,9 +298,6 @@ misclassified.
 - the remainder of the HTTP response contract beyond the first success response
   and the `INVALID_DESCRIPTION` error;
 - runtime validation approach;
-- AI provider and model;
-- prompt and structured-output strategy;
-- environment variables for mock scenarios;
 - application and provider error mapping;
 - frontend component-testing helper and exact later test boundaries;
 - development and production scripts.

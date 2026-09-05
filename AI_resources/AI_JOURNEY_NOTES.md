@@ -674,3 +674,112 @@ choices. No provider source module had been added, and the dependency remains
 usable because Groq officially supports the OpenAI-compatible client, but the
 sequence was still premature. Subsequent decisions were discussed and confirmed
 before implementation.
+
+## 2026-09-05 - Simplifying the Groq integration
+
+### Gateway refinement
+
+The model gateway originally accepted a prebuilt prompt string. The user agreed
+that it should instead receive the small application-owned object
+`{ description }`. A focused test first exposed the old prompt argument, then the
+application function was changed to forward the object unchanged. Prompt
+construction now belongs exclusively to the provider adapter.
+
+### Structured-output proposal challenged
+
+The AI initially proposed Groq strict Structured Outputs with an `anyOf` wrapper
+around the three result variants. The user questioned whether this added too much
+for the assignment. On review, the wrapper and a second full schema duplicated
+the manual parser already protecting the untrusted-output boundary.
+
+The proposal was simplified to Chat Completions with JSON Object Mode. The prompt
+describes the three valid shapes and the existing parser enforces them. This
+accepts a higher chance that a real response is rejected, but the application
+already maps invalid model output safely and the design is substantially easier
+to explain and modify.
+
+### Price accuracy clarification
+
+The user asked whether the model compares current market values. The current
+design does not query live Wallapop listings or another comparable-sales source.
+It produces an indicative range from the seller details and the model's learned
+general knowledge. Adding live search or marketplace data would require another
+external dependency, data-quality decisions, and category-specific comparison
+logic outside the requested scope.
+
+We chose to state this limitation honestly: all prices are estimates, limited
+input receives a wider model-generated range and tip, and no price is shown when
+the item cannot be identified.
+
+### Configuration behaviour
+
+`MODEL_PROVIDER` now selects `mock` or `groq`, with mock as the no-key default.
+When Groq is explicitly selected, a missing or blank `GROQ_API_KEY` stops startup
+with a clear error. A silent fallback was rejected because it could make a
+developer believe the real integration was running when the response was
+actually deterministic mock data.
+
+## 2026-09-05 - First real Groq calls
+
+### Environment setup correction
+
+The local `.env` is ignored by Git and contains the selected provider and the
+developer's private Groq key. The first attempt placed Node's optional env-file
+flag before `tsx watch`; `tsx` then interpreted `watch` as a script filename.
+The command was corrected to use Node as the launcher with `tsx` as a loader.
+
+Node watch mode also reacted to OneDrive changes under `node_modules`, repeatedly
+restarting the backend and interrupting a request. Restricting watch paths did not
+stop dependency-file events in this setup, so backend watch mode was removed.
+This is simpler and stable; backend changes require restarting `npm run dev`,
+while Vite still reloads frontend changes.
+
+### Model behaviour and prompt refinement
+
+The first real request used the short description `iPhone`. Groq responded with
+`needs_more_information`, contradicting the agreed rule that any recognizable
+item should produce non-blocking `limited` suggestions. The prompt was clarified
+with explicit `iPhone`, `Renault Twingo`, and vague-description examples.
+
+The next response correctly selected `limited` but omitted `currency` from the
+price range. The common parser rejected it and the endpoint returned the stable
+invalid-model-output response. A temporary local output log identified the exact
+missing field and was removed immediately. The prompt now states the three exact
+JSON shapes, including `currency: "EUR"`.
+
+A detailed Renault Twingo description was then classified as `limited` because
+the model asked for the seller's desired price. This was also inconsistent with
+the product: estimating that price is the assistant's responsibility. The prompt
+now explicitly forbids requiring an asking price and treats model, year, mileage,
+and condition as sufficient car details.
+
+### Verified outcome
+
+After the refinements, real calls produced all three expected branches:
+
+- `iPhone` produced `limited` with a wider EUR range and a details tip;
+- a Renault Twingo with year, mileage, and condition produced `complete`;
+- `Something from my garage` produced `needs_more_information` without a price.
+
+These failures were not manufactured for documentation. They demonstrate why
+real-model testing, explicit product examples, and runtime validation remain
+useful even when JSON Object Mode produces syntactically valid JSON.
+
+### Reducing repeated-call variability
+
+During manual UI testing, the user observed that identical descriptions could
+produce materially different outcomes. We clarified that model size can affect
+quality, but sampling randomness is the more direct cause of variation between
+otherwise identical requests.
+
+The Groq request now sets `temperature: 0.5` and `seed: 42`. Lower temperature
+reduces randomness, while the fixed seed requests reproducible sampling. This is
+a deliberate fit for a listing assistant, where consistency matters more than
+creative variety. Groq describes seeded determinism as best effort, so the
+application does not assume byte-for-byte stability across model updates.
+
+Three consecutive real requests with the same `iPhone` description all returned
+the expected `limited` outcome, a minimum of EUR 200, and a tip explaining the
+missing details. The maximum still varied between EUR 800 and EUR 1,000 and the
+tags were not identical. The configuration therefore improves product-level
+consistency without claiming exact determinism from the external model.

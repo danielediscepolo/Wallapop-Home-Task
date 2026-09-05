@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently --kill-others --names backend,frontend \"npm:dev:backend\" \"npm:dev:frontend\"",
-    "dev:backend": "tsx watch src/backend/server.ts",
+    "dev:backend": "node --env-file-if-exists=.env --import tsx src/backend/server.ts",
     "dev:frontend": "vite",
     "build": "vite build",
     "test": "vitest run",
@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "express": "^5.2.1",
+    "openai": "^7.10.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },

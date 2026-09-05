@@ -1,8 +1,8 @@
 import { createApp } from "./app";
-import { selectMockModel } from "./mockModel";
+import { selectModel } from "./selectModel";
 
 const port = 3001;
-const app = createApp(selectMockModel(process.env.MOCK_SCENARIO));
+const app = createApp(selectModel(process.env));
 
 app.listen(port, () => {
   console.log(`Backend listening on http://localhost:${port}`);
