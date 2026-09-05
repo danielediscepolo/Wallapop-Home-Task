@@ -73,6 +73,69 @@ describe("Listing Assistant", () => {
     expect(screen.getByText(/€2,500.*€4,000/)).toBeVisible();
   });
 
+  it("shows a wider estimate and guidance for a limited result", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        status: "limited",
+        title: "Used Renault Twingo",
+        tags: ["Renault", "Twingo", "city car"],
+        priceRange: {
+          min: 1500,
+          max: 5000,
+          currency: "EUR",
+        },
+        tip: "Add year, mileage and condition for a more accurate estimate.",
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+
+    await user.type(
+      screen.getByRole("textbox", { name: "Describe your item" }),
+      "Renault Twingo",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Generate suggestions" }),
+    );
+
+    expect(await screen.findByText(/€1,500.*€5,000/)).toBeVisible();
+    expect(
+      screen.getByText(
+        "Add year, mileage and condition for a more accurate estimate.",
+      ),
+    ).toBeVisible();
+  });
+
+  it("asks for more details when the item cannot be identified", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        status: "needs_more_information",
+        message: "Describe the item you want to sell more clearly.",
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+
+    await user.type(
+      screen.getByRole("textbox", { name: "Describe your item" }),
+      "Something from my garage",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Generate suggestions" }),
+    );
+
+    expect(
+      await screen.findByText("Describe the item you want to sell more clearly."),
+    ).toBeVisible();
+    expect(screen.queryByText("Suggested listing")).not.toBeInTheDocument();
+  });
+
   it("preserves the description and shows no result when model output is invalid", async () => {
     const user = userEvent.setup();
     const fetchMock = vi.fn().mockResolvedValue({

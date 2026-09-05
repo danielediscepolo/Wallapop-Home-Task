@@ -224,9 +224,29 @@ A separate nonsensical-but-structured scenario can be included if it protects a
 distinct deterministic rule without creating a semantic classification engine.
 
 The development server selects the deterministic mock through
-`MOCK_SCENARIO=valid|invalid`. An absent value defaults to `valid`; an unsupported
-value fails immediately instead of silently selecting a scenario. Environment
-file loading and real-provider selection are not implemented yet.
+`MOCK_SCENARIO=valid|limited|needs_more_information|invalid`. An absent value
+defaults to `valid`; an unsupported value fails immediately instead of silently
+selecting a scenario. Environment file loading and real-provider selection are
+not implemented yet.
+
+### Confirmed real-provider direction
+
+Use Groq with the `openai/gpt-oss-20b` model. Its free tier allows the real AI
+path to be demonstrated without OpenAI API billing, and Groq documents support
+for the selected OpenAI-compatible JavaScript client and structured JSON output.
+
+The provider will receive a small application-owned input object rather than a
+prebuilt provider prompt:
+
+```ts
+type ListingGenerationInput = {
+  description: string;
+};
+```
+
+This keeps prompt construction inside the provider adapter. The frontend request
+remains `{ description }`, and provider selection will later use
+`MODEL_PROVIDER=mock|groq`. `GROQ_API_KEY` must remain backend-only.
 
 ### Validation scope
 

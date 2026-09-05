@@ -608,3 +608,69 @@ already displayed the backend message, preserved the seller's description, and
 rendered no suggestion result. No production UI change was needed, so the new
 test records and protects existing behaviour rather than manufacturing a code
 change for the sake of TDD.
+
+## 2026-09-05 - Implementing the three product outcomes
+
+### Contract decision
+
+The user accepted a TypeScript discriminated union in which `status` determines
+the fields available to the application:
+
+- `complete` has title, tags, and price range;
+- `limited` has the same suggestions plus a non-blocking tip;
+- `needs_more_information` has only a seller-facing message.
+
+This prevents an unidentifiable item from accidentally carrying an invented
+price in the application type. The parser validates each branch at runtime
+because model output remains untrusted despite the TypeScript contract.
+
+### Useful compiler feedback
+
+After the parser tests for `needs_more_information` passed, TypeScript found that
+the React component still accessed title, tags, and price without checking the
+status. The UI was updated to render the message branch explicitly. This was a
+real example of the discriminated union exposing an incomplete consumer that
+runtime parser tests alone did not reveal.
+
+### Limited price decision
+
+The user requested a wider price range when important item details are missing.
+We considered letting the backend expand the range by a fixed percentage, but
+rejected it because the appropriate uncertainty differs substantially between
+cars, clothing, and electronics.
+
+The model will instead be instructed to return a conservative, wider range for
+`limited`. The backend validates only that the numbers form a coherent EUR range,
+and the UI displays both that range and the model-generated tip. Deterministic
+mock scenarios now expose `limited` and `needs_more_information` so both outcomes
+can be exercised without a real provider.
+
+## 2026-09-05 - Changing the real provider to Groq
+
+### Trigger
+
+The user has ChatGPT Plus but no OpenAI API key or API credit. The AI clarified
+that the ChatGPT subscription and API usage are separate, so the planned OpenAI
+call could not be tested with the existing subscription.
+
+### Alternatives and decision
+
+We compared paid OpenAI API access, a free cloud provider, and a local model. A
+local model would make reviewer setup heavier. Gemini offers a free tier but
+would require another SDK and has a free-tier data-use trade-off. The user chose
+Groq with `openai/gpt-oss-20b`: it provides sufficient free limits, structured
+output support, and an OpenAI-compatible API.
+
+The existing model boundary means this provider change remains isolated from the
+route, parser, shared result contract, and UI. The real adapter will use
+`GROQ_API_KEY` only on the backend, while mock mode will remain the default path
+that works without credentials.
+
+### Process correction
+
+The AI installed the `openai` SDK before all provider decisions had been
+confirmed. The user reminded the AI to ask before proceeding with significant
+choices. No provider source module had been added, and the dependency remains
+usable because Groq officially supports the OpenAI-compatible client, but the
+sequence was still premature. Subsequent decisions were discussed and confirmed
+before implementation.

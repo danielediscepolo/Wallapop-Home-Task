@@ -30,11 +30,31 @@ function parseJson(output: unknown): unknown {
 export function parseListingSuggestions(output: unknown): ListingSuggestions {
   const parsed = parseJson(output);
 
-  if (!isRecord(parsed) || parsed.status !== "complete") {
+  if (!isRecord(parsed)) {
     return invalidOutput();
   }
 
-  const { priceRange, tags, title } = parsed;
+  if (parsed.status === "needs_more_information") {
+    if (
+      typeof parsed.message !== "string" ||
+      parsed.message.trim().length === 0
+    ) {
+      return invalidOutput();
+    }
+
+    return {
+      status: parsed.status,
+      message: parsed.message.trim(),
+    };
+  }
+
+  if (
+    (parsed.status !== "complete" && parsed.status !== "limited")
+  ) {
+    return invalidOutput();
+  }
+
+  const { priceRange, status, tags, title } = parsed;
 
   if (typeof title !== "string" || title.trim().length === 0) {
     return invalidOutput();
@@ -74,10 +94,23 @@ export function parseListingSuggestions(output: unknown): ListingSuggestions {
     return invalidOutput();
   }
 
-  return {
-    status: "complete",
+  const suggestions = {
     title: title.trim(),
     tags: normalizedTags,
-    priceRange: { min, max, currency },
+    priceRange: { min, max, currency: "EUR" as const },
   };
+
+  if (status === "limited") {
+    if (typeof parsed.tip !== "string" || parsed.tip.trim().length === 0) {
+      return invalidOutput();
+    }
+
+    return {
+      status,
+      ...suggestions,
+      tip: parsed.tip.trim(),
+    };
+  }
+
+  return { status, ...suggestions };
 }

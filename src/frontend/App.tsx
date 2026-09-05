@@ -99,7 +99,15 @@ export function App() {
           </p>
         )}
 
-        {suggestions && (
+        {suggestions?.status === "needs_more_information" && (
+          <section className="result" aria-labelledby="more-information-title">
+            <p className="result-label">More information needed</p>
+            <h2 id="more-information-title">Tell us a little more</h2>
+            <p>{suggestions.message}</p>
+          </section>
+        )}
+
+        {suggestions && suggestions.status !== "needs_more_information" && (
           <section className="result" aria-labelledby="suggested-title">
             <p className="result-label">Suggested listing</p>
             <h2 id="suggested-title">{suggestions.title}</h2>
@@ -127,6 +135,10 @@ export function App() {
                 )}
               </strong>
             </div>
+
+            {suggestions.status === "limited" && (
+              <p className="limited-tip">{suggestions.tip}</p>
+            )}
           </section>
         )}
       </section>
