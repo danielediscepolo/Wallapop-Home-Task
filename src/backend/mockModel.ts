@@ -11,3 +11,18 @@ export const validMockModel: GenerateModelOutput = async () =>
       currency: "EUR",
     },
   });
+
+export const invalidMockModel: GenerateModelOutput = async () => "{not-json";
+
+export function selectMockModel(
+  scenario: string | undefined,
+): GenerateModelOutput {
+  switch (scenario ?? "valid") {
+    case "valid":
+      return validMockModel;
+    case "invalid":
+      return invalidMockModel;
+    default:
+      throw new Error(`Unsupported MOCK_SCENARIO: ${scenario}`);
+  }
+}

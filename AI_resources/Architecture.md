@@ -223,6 +223,11 @@ It must support at least:
 A separate nonsensical-but-structured scenario can be included if it protects a
 distinct deterministic rule without creating a semantic classification engine.
 
+The development server selects the deterministic mock through
+`MOCK_SCENARIO=valid|invalid`. An absent value defaults to `valid`; an unsupported
+value fails immediately instead of silently selecting a scenario. Environment
+file loading and real-provider selection are not implemented yet.
+
 ### Validation scope
 
 Use structural validation plus small deterministic domain rules, such as the

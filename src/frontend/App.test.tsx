@@ -72,4 +72,37 @@ describe("Listing Assistant", () => {
     expect(screen.getByText("Twingo")).toBeVisible();
     expect(screen.getByText(/€2,500.*€4,000/)).toBeVisible();
   });
+
+  it("preserves the description and shows no result when model output is invalid", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      json: async () => ({
+        error: {
+          code: "INVALID_MODEL_OUTPUT",
+          message:
+            "We couldn't generate reliable suggestions. Please try again.",
+        },
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+
+    const description = screen.getByRole("textbox", {
+      name: "Describe your item",
+    });
+    await user.type(description, "Renault Twingo");
+    await user.click(
+      screen.getByRole("button", { name: "Generate suggestions" }),
+    );
+
+    expect(
+      await screen.findByText(
+        "We couldn't generate reliable suggestions. Please try again.",
+      ),
+    ).toBeVisible();
+    expect(description).toHaveValue("Renault Twingo");
+    expect(screen.queryByText("Suggested listing")).not.toBeInTheDocument();
+  });
 });

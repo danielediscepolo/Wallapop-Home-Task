@@ -2,7 +2,7 @@ import request from "supertest";
 import { describe, expect, it, vi } from "vitest";
 
 import { createApp } from "./app";
-import { validMockModel } from "./mockModel";
+import { invalidMockModel, validMockModel } from "./mockModel";
 
 describe("POST /api/listing-suggestions", () => {
   it("returns complete suggestions for a valid description in mock mode", async () => {
@@ -50,8 +50,7 @@ describe("POST /api/listing-suggestions", () => {
   });
 
   it("returns a stable error when the model output is invalid", async () => {
-    const invalidModel = async () => "{not-json";
-    const app = createApp(invalidModel);
+    const app = createApp(invalidMockModel);
 
     const response = await request(app)
       .post("/api/listing-suggestions")

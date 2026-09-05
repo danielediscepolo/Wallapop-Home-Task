@@ -578,3 +578,33 @@ the TypeScript check, and the production frontend build pass.
 After moving the result type, TypeScript detected that the React component still
 imported it through the HTTP module. Importing the type directly from the shared
 contract completed the intended dependency direction without adding a re-export.
+
+## 2026-09-05 - Selecting the mock scenario from the environment
+
+### Small-step boundary
+
+The user explicitly asked to proceed in smaller increments. The first step moved
+the malformed response from an inline test function into a real
+`invalidMockModel`, while leaving environment selection and UI behaviour out.
+
+The second step added only a pure `selectMockModel` function and connected it to
+the development server. `MOCK_SCENARIO` accepts `valid` or `invalid`, defaults to
+`valid` when absent, and rejects unknown values at startup.
+
+### TDD result
+
+The first run failed because the selector did not exist. After adding the small
+switch and updating the server, all 15 tests and the TypeScript check passed.
+
+No environment-file loader, cross-platform helper script, real-provider selector,
+or new abstraction was added. The next behaviour remains displaying the invalid
+mock outcome clearly in the frontend while preserving the seller's description.
+
+### Frontend error verification
+
+A focused React test then simulated the backend's `INVALID_MODEL_OUTPUT`
+response. It passed on its first run: the existing generic request-error state
+already displayed the backend message, preserved the seller's description, and
+rendered no suggestion result. No production UI change was needed, so the new
+test records and protects existing behaviour rather than manufacturing a code
+change for the sake of TDD.
