@@ -171,9 +171,39 @@ h1 {
 }
 
 .result h2 {
-  margin-bottom: 24px;
+  margin: 0;
   font-size: 1.45rem;
   line-height: 1.3;
+}
+
+.result-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.copy-title-button {
+  flex: 0 0 auto;
+  min-height: 36px;
+  border: 1px solid #087f72;
+  border-radius: 6px;
+  padding: 0 12px;
+  color: #087f72;
+  background: #ffffff;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.copy-title-button:hover {
+  background: #e9f8f5;
+}
+
+.copy-title-button:focus-visible {
+  outline: 3px solid rgba(19, 193, 172, 0.35);
+  outline-offset: 2px;
 }
 
 .result-row {
@@ -252,5 +282,10 @@ h1 {
 
   .result {
     padding: 20px;
+  }
+
+  .result-title {
+    flex-direction: column;
+    gap: 12px;
   }
 }

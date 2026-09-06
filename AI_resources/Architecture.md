@@ -269,7 +269,9 @@ not a guarantee that outputs remain identical across provider or model changes.
 The prompt asks for concise factual titles and search tags that complement the
 title rather than mechanically splitting it. It preserves compound product
 identities, discourages repeated concepts and bare attribute values, and requires
-one output language. These are semantic quality instructions, not parser rules:
+one output language. It also excludes secondary-component defects from tags
+unless the main item itself is sold as non-working or for parts. These are
+semantic quality instructions, not parser rules:
 rejecting imperfect but usable tags would turn a quality limitation into an HTTP
 error, while an automatic second model call would add latency and provider usage.
 

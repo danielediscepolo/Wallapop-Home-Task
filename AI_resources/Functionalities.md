@@ -45,7 +45,8 @@ complete mocked result. It also removes previous suggestions when the descriptio
 changes or a new request starts, so stale output is never presented as current.
 Descriptions have a visible 1,000-character limit enforced by both frontend and
 backend without silently truncating the seller's text. Copying, editing, and
-explicit regeneration controls remain later increments.
+explicit regeneration controls remain later increments, except for the title,
+which can already be copied directly from the result.
 
 ## Expected product outcomes
 
@@ -53,6 +54,9 @@ Generated titles should be concise and factual, combining the product identity
 with useful distinguishing details supplied by the seller. Tags should preserve
 the main identity while adding meaningful category terms, search phrases, or
 verified characteristics instead of merely splitting the title into words.
+Defects in a secondary component belong in the title or description, not in
+search tags; the exception is an item whose main identity is non-working or
+explicitly sold for parts.
 
 ### Complete information
 
@@ -77,7 +81,7 @@ This is an expected product state, not a technical error.
 
 These features are intended for later increments, after the first vertical slice:
 
-- copy individual suggestions;
+- copy tags or price information in addition to the implemented title copy;
 - activate an explicit edit mode for title, tags, and price;
 - save or cancel local edits;
 - regenerate suggestions from the current description;

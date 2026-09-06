@@ -74,6 +74,12 @@ describe("createGroqModel", () => {
     expect(instructions).toContain("brand alone");
     expect(instructions).toContain("auto del 2012");
     expect(instructions).toContain(
+      "Do not use defects, damage, malfunctions, or negative condition as tags",
+    );
+    expect(instructions).toContain(
+      "controller con analogico destro difettoso",
+    );
+    expect(instructions).toContain(
       "must use the seller's predominant language",
     );
     expect(instructions).toContain("Never mix languages");

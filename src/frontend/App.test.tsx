@@ -98,6 +98,45 @@ describe("Listing Assistant", () => {
     expect(screen.getByText(/€2,500.*€4,000/)).toBeVisible();
   });
 
+  it("copies the suggested title", async () => {
+    const user = userEvent.setup();
+    const writeText = vi.spyOn(navigator.clipboard, "writeText");
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        status: "complete",
+        title: "Renault Twingo 2018 in good condition",
+        tags: ["Renault Twingo", "city car", "2018 vehicle"],
+        priceRange: {
+          min: 5000,
+          max: 7000,
+          currency: "EUR",
+        },
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+
+    await user.type(
+      screen.getByRole("textbox", { name: "Describe your item" }),
+      "Renault Twingo 2018, 70000 km, in good condition",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Generate suggestions" }),
+    );
+    await screen.findByRole("heading", {
+      name: "Renault Twingo 2018 in good condition",
+    });
+
+    await user.click(screen.getByRole("button", { name: "Copy title" }));
+
+    expect(writeText).toHaveBeenCalledWith(
+      "Renault Twingo 2018 in good condition",
+    );
+    expect(screen.getByRole("button", { name: "Copied" })).toBeVisible();
+  });
+
   it("shows a wider estimate and guidance for a limited result", async () => {
     const user = userEvent.setup();
     const fetchMock = vi.fn().mockResolvedValue({

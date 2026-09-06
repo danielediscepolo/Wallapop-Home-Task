@@ -26,6 +26,7 @@ export function App() {
   const [suggestions, setSuggestions] =
     useState<ListingSuggestions | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTitleCopied, setIsTitleCopied] = useState(false);
   const descriptionLength = Array.from(description).length;
   const isDescriptionTooLong = descriptionLength > DESCRIPTION_MAX_LENGTH;
 
@@ -45,6 +46,7 @@ export function App() {
     setFieldError(null);
     setRequestError(null);
     setSuggestions(null);
+    setIsTitleCopied(false);
     setIsLoading(true);
 
     try {
@@ -58,6 +60,20 @@ export function App() {
       );
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleCopyTitle() {
+    if (!suggestions || suggestions.status === "needs_more_information") {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(suggestions.title);
+      setRequestError(null);
+      setIsTitleCopied(true);
+    } catch {
+      setRequestError("Could not copy the title.");
     }
   }
 
@@ -98,6 +114,7 @@ export function App() {
               const nextDescription = event.target.value;
               setDescription(nextDescription);
               setSuggestions(null);
+              setIsTitleCopied(false);
               if (Array.from(nextDescription).length > DESCRIPTION_MAX_LENGTH) {
                 setFieldError(DESCRIPTION_TOO_LONG_MESSAGE);
               } else if (fieldError) {
@@ -142,7 +159,16 @@ export function App() {
         {suggestions && suggestions.status !== "needs_more_information" && (
           <section className="result" aria-labelledby="suggested-title">
             <p className="result-label">Suggested listing</p>
-            <h2 id="suggested-title">{suggestions.title}</h2>
+            <div className="result-title">
+              <h2 id="suggested-title">{suggestions.title}</h2>
+              <button
+                className="copy-title-button"
+                type="button"
+                onClick={handleCopyTitle}
+              >
+                {isTitleCopied ? "Copied" : "Copy title"}
+              </button>
+            </div>
 
             <div className="result-row">
               <span className="result-heading">Search tags</span>

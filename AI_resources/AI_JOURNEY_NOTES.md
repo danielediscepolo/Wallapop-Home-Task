@@ -861,3 +861,37 @@ We therefore treated this as an application-specific boundary and reduced it to
 1,000 Unicode characters, enough for useful listing details while keeping model
 input and latency proportionate. The shared constant keeps the existing frontend
 and backend behaviour aligned.
+
+## 2026-09-06 - Making current limitations reviewer-visible
+
+After pushing the latest functional increment, the user asked that the current
+limits be documented while keeping language consistency and search-tag quality
+on the pre-delivery polish list. We added a concise README section covering the
+lack of live market data, best-effort model consistency, occasional language
+drift, prompt-guided tag quality, and deliberately deferred product features.
+These are presented as current constraints rather than excuses, and generated
+suggestions remain explicitly subject to seller review.
+
+## 2026-09-06 - Keeping secondary defects out of search tags
+
+The user tested a PS5 bundle with GTA 5, Dark Souls, and two controllers, one of
+which had a broken right analog stick. Groq initially returned
+`controller con analogico destro difettoso` as a tag. The title was useful, but
+the tag described a secondary defect rather than a plausible buyer search.
+
+We refined the prompt so tags focus on how buyers discover the main item or
+bundle. Secondary defects remain available for an honest title or description
+but are excluded from tags. The rule keeps an exception when the main item is
+explicitly sold as non-working or for parts. Repeating the original input against
+Groq produced `PlayStation 5`, `bundle PS5`, `console con giochi`, `GTA 5`, and
+`Dark Souls`, while preserving the controller defect in the title.
+
+## 2026-09-06 - Copying the generated title
+
+Before committing the prompt and limitation documentation, the user requested a
+small on-screen action to make the generated title easy to reuse. We added a
+`Copy title` button beside complete and limited result titles. It writes only the
+title through the browser Clipboard API and changes to `Copied` after success.
+Clipboard failure reuses the existing visible request-error area rather than
+introducing another notification system. A focused frontend test verifies the
+copied value and confirmation state.
