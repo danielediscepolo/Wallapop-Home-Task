@@ -914,3 +914,64 @@ Real Groq calls verified both boundaries. The garage example returned an Italian
 clarification asking the seller to choose one item. The detailed PS5 bundle with
 games, two controllers, and one controller defect returned `complete`, with the
 defect retained in the title and excluded from its search tags.
+
+## 2026-09-06 - Stabilizing frontend transport errors
+
+Before moving to delivery documentation, we reviewed the remaining implementation
+boundaries. Although provider failures already produced structured JSON, the
+frontend still attempted to parse every response as JSON and exposed raw network
+or parser messages when the backend or proxy failed differently.
+
+A focused request-module suite first reproduced network rejection, non-JSON
+responses, and an unexpected JSON error shape. The client now converts those
+cases to one stable retryable message while preserving valid backend messages.
+This keeps transport details out of the React component and does not introduce a
+new error hierarchy.
+
+## 2026-09-06 - Bounding and invalidating in-flight requests
+
+A general diagnostic found two remaining asynchronous edge cases. First, a
+seller could submit description A, edit it to B while Groq was working, and then
+see A's late result beside B. Second, the OpenAI-compatible SDK used for Groq
+defaulted to a ten-minute timeout, which was unsuitable for this interaction.
+
+We chose to keep the textarea editable. A component-local request version now
+invalidates the current request whenever the description changes. Late success
+and error responses are ignored, and the seller can submit the edited text
+without waiting for the obsolete request. This avoids an abort-controller layer
+while protecting visible state.
+
+Groq calls now receive a 30-second timeout and one retry. Exhaustion continues
+through the existing provider-unavailable path, so the change bounds waiting
+without adding another application error type. Both behaviours were introduced
+with focused failing tests before implementation.
+
+## 2026-09-06 - Adding one vertical integration test
+
+The user asked whether a small real integration test would add value without
+Playwright. Existing Supertest coverage already exercised the backend stack, but
+the frontend request client and backend contract were still verified separately.
+
+We added one happy-path integration test that starts Express on an ephemeral
+port and sends the frontend client's real HTTP request through the valid mock,
+generation service, and parser. It deliberately excludes React rendering and
+the live Groq provider because those boundaries already have focused tests and a
+real provider would make the suite credential-dependent and non-deterministic.
+No dependency or production abstraction was added for the test.
+
+## 2026-09-06 - General health and simplicity review
+
+After the integration increment, the project passed 42 tests across nine files,
+TypeScript checking, the production frontend build, dependency-tree validation,
+and an online npm audit with no reported vulnerabilities. A secret scan found no
+Groq key outside the ignored local environment file. The development frontend
+and backend also started successfully together and responded on their expected
+ports; an initial `tsx` system error occurred only inside the restricted tool
+sandbox and disappeared when the same command ran in the normal environment.
+
+The production structure remains proportionate to one screen, one endpoint, and
+one provider boundary. We retained the small gateway, orchestration function,
+parser, provider adapter, and HTTP app because each isolates behaviour already
+used by tests. Collapsing them would reduce file count but mix trust, transport,
+and provider concerns. We removed the obsolete frontend `.gitkeep` and corrected
+stale architecture notes; no speculative refactor or new tooling was added.

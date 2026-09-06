@@ -2,7 +2,13 @@
 
 import "@testing-library/jest-dom/vitest";
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -309,5 +315,50 @@ describe("Listing Assistant", () => {
       screen.getByRole("button", { name: "Generating..." }),
     ).toBeDisabled();
     expect(screen.queryByText("Suggested listing")).not.toBeInTheDocument();
+  });
+
+  it("ignores a response when the description changes while generating", async () => {
+    const user = userEvent.setup();
+    let resolveRequest!: (response: Response) => void;
+    const fetchMock = vi.fn(
+      () =>
+        new Promise<Response>((resolve) => {
+          resolveRequest = resolve;
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+
+    const description = screen.getByRole("textbox", {
+      name: "Describe your item",
+    });
+    await user.type(description, "iPhone 13");
+    await user.click(
+      screen.getByRole("button", { name: "Generate suggestions" }),
+    );
+    await user.type(description, " with 128 GB");
+
+    await act(async () => {
+      resolveRequest({
+        ok: true,
+        json: async () => ({
+          status: "complete",
+          title: "Used iPhone 13",
+          tags: ["Apple", "iPhone", "smartphone"],
+          priceRange: {
+            min: 300,
+            max: 450,
+            currency: "EUR",
+          },
+        }),
+      } as Response);
+    });
+
+    expect(description).toHaveValue("iPhone 13 with 128 GB");
+    expect(screen.queryByText("Suggested listing")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Generate suggestions" }),
+    ).toBeEnabled();
   });
 });

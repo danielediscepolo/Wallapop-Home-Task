@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 
 import { requestListingSuggestions } from "./listingSuggestionsApi";
 import {
@@ -20,6 +20,7 @@ function formatPrice(value: number, currency: string) {
 }
 
 export function App() {
+  const requestVersion = useRef(0);
   const [description, setDescription] = useState("");
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
@@ -48,18 +49,26 @@ export function App() {
     setSuggestions(null);
     setIsTitleCopied(false);
     setIsLoading(true);
+    const submittedRequestVersion = ++requestVersion.current;
 
     try {
       const result = await requestListingSuggestions(description);
-      setSuggestions(result);
+
+      if (submittedRequestVersion === requestVersion.current) {
+        setSuggestions(result);
+      }
     } catch (error) {
-      setRequestError(
-        error instanceof Error
-          ? error.message
-          : "Could not generate suggestions.",
-      );
+      if (submittedRequestVersion === requestVersion.current) {
+        setRequestError(
+          error instanceof Error
+            ? error.message
+            : "Could not generate suggestions.",
+        );
+      }
     } finally {
-      setIsLoading(false);
+      if (submittedRequestVersion === requestVersion.current) {
+        setIsLoading(false);
+      }
     }
   }
 
@@ -112,9 +121,12 @@ export function App() {
             placeholder="For example: Renault Twingo, used and in good condition..."
             onChange={(event) => {
               const nextDescription = event.target.value;
+              requestVersion.current += 1;
               setDescription(nextDescription);
               setSuggestions(null);
+              setRequestError(null);
               setIsTitleCopied(false);
+              setIsLoading(false);
               if (Array.from(nextDescription).length > DESCRIPTION_MAX_LENGTH) {
                 setFieldError(DESCRIPTION_TOO_LONG_MESSAGE);
               } else if (fieldError) {

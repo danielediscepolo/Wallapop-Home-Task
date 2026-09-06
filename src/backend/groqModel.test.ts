@@ -12,6 +12,7 @@ describe("createGroqModel", () => {
     const createCompletion = vi.fn(
       async (
         _request: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming,
+        _options?: { timeout: number; maxRetries: number },
       ) => ({
         choices: [{ message: { content: modelOutput } }],
       }),
@@ -44,6 +45,10 @@ describe("createGroqModel", () => {
         { role: "system", content: expect.any(String) },
         { role: "user", content: "Something from my garage" },
       ],
+    });
+    expect(createCompletion.mock.calls[0]?.[1]).toEqual({
+      timeout: 30_000,
+      maxRetries: 1,
     });
 
     const instructions = request.messages[0]?.content;

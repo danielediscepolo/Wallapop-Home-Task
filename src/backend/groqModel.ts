@@ -38,6 +38,10 @@ type CompletionResponse = {
 
 type CreateCompletion = (
   request: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming,
+  options?: {
+    timeout: number;
+    maxRetries: number;
+  },
 ) => Promise<CompletionResponse>;
 
 type CreateGroqModelOptions = {
@@ -49,7 +53,7 @@ type CreateGroqModelOptions = {
 function connectToGroq(apiKey: string): CreateCompletion {
   const client = new OpenAI({ apiKey, baseURL: GROQ_BASE_URL });
 
-  return (request) => client.chat.completions.create(request);
+  return (request, options) => client.chat.completions.create(request, options);
 }
 
 export function createGroqModel({
@@ -58,16 +62,19 @@ export function createGroqModel({
   createCompletion = connectToGroq(apiKey),
 }: CreateGroqModelOptions): GenerateModelOutput {
   return async ({ description }) => {
-    const response = await createCompletion({
-      model,
-      messages: [
-        { role: "system", content: LISTING_ASSISTANT_INSTRUCTIONS },
-        { role: "user", content: description },
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.5,
-      seed: 42,
-    });
+    const response = await createCompletion(
+      {
+        model,
+        messages: [
+          { role: "system", content: LISTING_ASSISTANT_INSTRUCTIONS },
+          { role: "user", content: description },
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.5,
+        seed: 42,
+      },
+      { timeout: 30_000, maxRetries: 1 },
+    );
 
     return response.choices[0]?.message.content ?? null;
   };

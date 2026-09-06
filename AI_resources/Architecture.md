@@ -165,6 +165,11 @@ from the React component. React local state owns the description, field error,
 request error, loading flag, and current result; no shared state library is
 needed.
 
+The request module preserves structured backend error messages but treats network
+failures, non-JSON responses, and unexpected error shapes uniformly. They become
+a stable retryable message instead of exposing transport or JSON parser details
+in the UI.
+
 This is a responsibility map, not a commitment to one file or class per line.
 
 ## Confirmed AI boundary
@@ -311,27 +316,24 @@ This deliberately avoids a provider-error hierarchy while there is only one real
 provider; the mapping can become more specific if another failure source enters
 the generation flow.
 
-## Other open decisions
+## Remaining delivery work
 
-- the remainder of the HTTP response contract beyond the first success response
-  and the `INVALID_DESCRIPTION` error;
-- runtime validation approach;
-- more granular provider error mapping if the generation flow gains other
-  failure sources;
-- frontend component-testing helper and exact later test boundaries;
-- development and production scripts.
+- document the supported Node.js version and local commands in the README;
+- decide whether the take-home needs a production command that serves the built
+  frontend, rather than the current development-only two-process setup;
+- consider more granular provider errors only if another external failure source
+  enters the generation flow.
 
 ## Refactoring watchpoints
 
-The first vertical slice intentionally keeps some responsibilities together.
-`generateListingSuggestions` currently creates the prompt, calls the model
-gateway, and parses JSON. This is acceptable while there is only one successful
-path, but it must be reviewed as runtime validation and additional outcomes are
-introduced.
+`generateListingSuggestions` intentionally remains a small orchestration
+function: it passes application input through the model gateway and sends the
+untrusted result to the parser. Provider prompt construction belongs to the Groq
+adapter, while HTTP validation and status mapping belong to the Express app.
 
 Split responsibilities only when the next behaviour produces a clear boundary;
-do not keep adding parsing, validation, provider error mapping, and prompt logic
-to one growing function.
+do not introduce repositories, controllers, or a provider-error hierarchy while
+the application still has one endpoint and one real provider.
 
 Basic request-shape validation currently belongs to the Express route. The first
 rule rejects a missing, non-string, empty, or whitespace-only `description` with
@@ -344,3 +346,24 @@ contract keeps frontend guidance and backend enforcement aligned. The frontend
 preserves overlong input, shows its character count, and prevents submission;
 the backend remains the source of truth and returns `DESCRIPTION_TOO_LONG` with
 HTTP 400 without calling the model.
+
+## Request lifecycle safeguards
+
+Each Groq completion has a 30-second timeout and at most one SDK retry. This
+replaces the SDK's much longer default wait with a bounded interaction while
+still tolerating one transient failure. Exhausted requests use the existing
+`MODEL_UNAVAILABLE` response instead of introducing a timeout-specific error.
+
+The seller may keep editing while generation is in progress. Editing invalidates
+the in-flight request for UI purposes and immediately restores the submit action.
+If an older success or failure arrives later, it is ignored instead of being
+shown beside a newer description. A component-local request version is enough
+for this one-request screen; an abort-controller layer is not currently needed.
+
+## Integration-test boundary
+
+One vertical integration test starts Express on an ephemeral local port and
+calls it through the real frontend request client with the valid mock model. It
+checks the serialization and HTTP boundary through parsing without depending on
+Groq, credentials, fixed ports, Vite, or a browser. React behaviour remains in
+component tests and provider formatting remains in adapter tests.
