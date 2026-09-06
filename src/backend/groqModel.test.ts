@@ -63,6 +63,11 @@ describe("createGroqModel", () => {
     expect(instructions).toContain('"currency":"EUR"');
     expect(instructions).toContain("recognizable product or product category");
     expect(instructions).toContain('such as "iPhone" or "Renault Twingo"');
+    expect(instructions).toContain("multiple unrelated items");
+    expect(instructions).toContain("Do not choose one item arbitrarily");
+    expect(instructions).toContain("explicitly presents them as one lot or bundle");
+    expect(instructions).toContain("Do not choose limited merely because any possible detail is missing");
+    expect(instructions).toContain("warranty, location, original packaging");
     expect(instructions).toContain("Never ask the seller for an asking price");
     expect(instructions).toContain(
       "product type, brand or model, and useful distinguishing details",

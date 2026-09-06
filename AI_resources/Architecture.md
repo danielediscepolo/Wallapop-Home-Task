@@ -275,6 +275,12 @@ semantic quality instructions, not parser rules:
 rejecting imperfect but usable tags would turn a quality limitation into an HTTP
 error, while an automatic second model call would add latency and provider usage.
 
+Outcome selection is also prompt-owned. `limited` is reserved for missing
+price-relevant information rather than any optional detail. Multiple unrelated
+items without an explicit lot use `needs_more_information`; an explicit or
+coherent bundle remains one sellable item. The application does not duplicate
+this semantic classification with keyword heuristics.
+
 Price ranges are model estimates based on general learned knowledge, not live
 Wallapop listings or a comparable-sales data source. The prompt avoids claiming
 live market data, `limited` requests a wider range, and the UI labels every range

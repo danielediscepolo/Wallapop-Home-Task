@@ -75,6 +75,10 @@ or condition.
 Do not invent title, tags, or price. Keep the description editable and ask the
 seller to explain clearly what is being sold.
 
+Use the same clarification outcome when several unrelated products are listed
+without explicitly presenting them as one lot. Do not choose one item on the
+seller's behalf. Related items explicitly offered together remain a valid bundle.
+
 This is an expected product state, not a technical error.
 
 ## Planned product features

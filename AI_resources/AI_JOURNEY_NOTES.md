@@ -895,3 +895,22 @@ title through the browser Clipboard API and changes to `Copied` after success.
 Clipboard failure reuses the existing visible request-error area rather than
 introducing another notification system. A focused frontend test verifies the
 copied value and confirmation state.
+
+## 2026-09-06 - Rebalancing result classification
+
+The user found that `Nel garage ho una bici, una vecchia PlayStation e una
+lampada che non uso piu` incorrectly generated a bicycle listing. The model was
+also tending to choose `limited` whenever any optional information was absent,
+making `complete` too difficult to reach and clarification too rare.
+
+We refined the outcome instructions in two ways. Multiple unrelated products now
+require `needs_more_information` unless the seller explicitly presents one lot;
+the model must not choose an item arbitrarily. `limited` now depends on missing
+price-relevant information, not optional details such as location, warranty,
+packaging, or an exhaustive accessory list. A coherent console bundle remains a
+single product.
+
+Real Groq calls verified both boundaries. The garage example returned an Italian
+clarification asking the seller to choose one item. The detailed PS5 bundle with
+games, two controllers, and one controller defect returned `complete`, with the
+defect retained in the title and excluded from its search tags.
