@@ -783,3 +783,81 @@ the expected `limited` outcome, a minimum of EUR 200, and a tip explaining the
 missing details. The maximum still varied between EUR 800 and EUR 1,000 and the
 tags were not identical. The configuration therefore improves product-level
 consistency without claiming exact determinism from the external model.
+
+## 2026-09-06 - Handling temporary model failures
+
+After completing the real Groq path, the user agreed that the next small
+increment should protect the UI from provider failures such as network errors or
+rate limits. A new endpoint test first demonstrated the existing generic HTTP
+500 response.
+
+The generation route now keeps invalid AI output separate as
+`INVALID_MODEL_OUTPUT` with HTTP 502 and maps other generation failures to the
+stable `MODEL_UNAVAILABLE` response with HTTP 503. The frontend already rendered
+the backend message, preserved the description, and allowed another submission,
+so its existing error-path test covered the required interaction without adding
+a duplicate test. We deliberately did not introduce provider-specific exception
+classes while the generation flow has only one external failure source.
+
+## 2026-09-06 - Preventing stale suggestions
+
+The user raised the case where a seller edits the description after receiving a
+result or submits the same description again. We considered keeping the previous
+result with a stale marker, but chose the simpler behaviour: previous suggestions
+are removed as soon as the description changes and whenever a new request starts.
+
+Two frontend tests cover both transitions. The implementation only resets the
+existing React state and does not add result history, extra status variants, or
+new components. If generation fails, the current description and retryable error
+remain visible without presenting the old result as current.
+
+## 2026-09-06 - Setting a description limit
+
+The user accepted a 2,000-character maximum and asked for the limit to remain
+visible as useful information in the interface. The limit is held in the shared
+contract so the React UI and Express validation cannot acquire separate values.
+
+The UI displays a live character count, preserves text beyond the limit, shows
+an inline error, and disables generation until the description is corrected.
+The backend independently rejects overlong input with HTTP 400 and
+`DESCRIPTION_TOO_LONG` before calling the model. Unicode code points are counted
+instead of JavaScript UTF-16 code units so common emoji are not counted twice.
+
+## 2026-09-06 - Improving titles and search tags
+
+The user observed that generated titles could be too generic and tags often
+looked like individual words copied from the title. Wallapop's own seller
+guidance recommends descriptive, precise titles. We agreed to improve the model
+instructions before considering deterministic post-processing.
+
+The prompt now asks for concise factual titles built from product identity and
+available distinguishing details. Tags should be meaningful search concepts,
+keep compound identities together, complement the title, avoid repeated
+near-synonyms, and use one language. Mock results were aligned with that intent.
+
+Real Groq checks showed a meaningful but imperfect improvement. A detailed
+iPhone description produced an Italian factual title and compound tags, while a
+sparse `Renault Twingo` input still produced some generic tags. A Nike example
+kept useful phrases but also returned bare size and color values despite the
+instruction. We chose not to add brittle category-independent filtering or a
+second AI call: some attribute tags remain useful, and semantic quality cannot
+be guaranteed by structural validation. This limitation is intentionally visible
+rather than hidden behind extra architecture.
+
+The user then identified a concrete weak tag: `2012` was returned alone for a
+Mercedes. We added examples requiring attribute tags to carry product context,
+such as `auto del 2012` and `scarpe taglia 42`. A repeated real request for
+`Mercedes AMG 2012 grigio elettrico` returned `auto 2012`, confirming the desired
+improvement for that case. The same response still mixed languages in its tip,
+which reinforces that prompt constraints improve but do not guarantee semantic
+model behaviour.
+
+## 2026-09-06 - Reducing the description limit
+
+After trying the interface, the user considered the initial 2,000-character
+maximum unnecessarily high. Wallapop's public seller guidance encourages a
+detailed description but does not state an announcement-description maximum.
+We therefore treated this as an application-specific boundary and reduced it to
+1,000 Unicode characters, enough for useful listing details while keeping model
+input and latency proportionate. The shared constant keeps the existing frontend
+and backend behaviour aligned.

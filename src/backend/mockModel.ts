@@ -4,7 +4,7 @@ export const validMockModel: GenerateModelOutput = async () =>
   JSON.stringify({
     status: "complete",
     title: "Renault Twingo 2018 in good condition",
-    tags: ["renault", "twingo", "used car"],
+    tags: ["Renault Twingo", "city car", "2018 vehicle"],
     priceRange: {
       min: 5_000,
       max: 7_000,
@@ -17,8 +17,8 @@ export const invalidMockModel: GenerateModelOutput = async () => "{not-json";
 export const limitedMockModel: GenerateModelOutput = async () =>
   JSON.stringify({
     status: "limited",
-    title: "Used Renault Twingo",
-    tags: ["renault", "twingo", "city car"],
+    title: "Renault Twingo",
+    tags: ["Renault Twingo", "city car", "compact vehicle"],
     priceRange: {
       min: 1_500,
       max: 5_000,

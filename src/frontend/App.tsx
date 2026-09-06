@@ -1,9 +1,15 @@
 import { useState, type FormEvent } from "react";
 
 import { requestListingSuggestions } from "./listingSuggestionsApi";
-import type { ListingSuggestions } from "../shared/listingSuggestions";
+import {
+  DESCRIPTION_MAX_LENGTH,
+  type ListingSuggestions,
+} from "../shared/listingSuggestions";
 
 const REQUIRED_DESCRIPTION_MESSAGE = "Description is required.";
+const FORMATTED_DESCRIPTION_MAX_LENGTH =
+  DESCRIPTION_MAX_LENGTH.toLocaleString("en-IE");
+const DESCRIPTION_TOO_LONG_MESSAGE = `Description must be ${FORMATTED_DESCRIPTION_MAX_LENGTH} characters or fewer.`;
 
 function formatPrice(value: number, currency: string) {
   return new Intl.NumberFormat("en-IE", {
@@ -20,6 +26,8 @@ export function App() {
   const [suggestions, setSuggestions] =
     useState<ListingSuggestions | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const descriptionLength = Array.from(description).length;
+  const isDescriptionTooLong = descriptionLength > DESCRIPTION_MAX_LENGTH;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -29,8 +37,14 @@ export function App() {
       return;
     }
 
+    if (isDescriptionTooLong) {
+      setFieldError(DESCRIPTION_TOO_LONG_MESSAGE);
+      return;
+    }
+
     setFieldError(null);
     setRequestError(null);
+    setSuggestions(null);
     setIsLoading(true);
 
     try {
@@ -74,21 +88,39 @@ export function App() {
             rows={7}
             value={description}
             aria-invalid={fieldError !== null}
-            aria-describedby={fieldError ? "description-error" : undefined}
+            aria-describedby={
+              fieldError
+                ? "description-limit description-error"
+                : "description-limit"
+            }
             placeholder="For example: Renault Twingo, used and in good condition..."
             onChange={(event) => {
-              setDescription(event.target.value);
-              if (fieldError) {
+              const nextDescription = event.target.value;
+              setDescription(nextDescription);
+              setSuggestions(null);
+              if (Array.from(nextDescription).length > DESCRIPTION_MAX_LENGTH) {
+                setFieldError(DESCRIPTION_TOO_LONG_MESSAGE);
+              } else if (fieldError) {
                 setFieldError(null);
               }
             }}
           />
+          <div className="description-meta" id="description-limit">
+            <span>Maximum {FORMATTED_DESCRIPTION_MAX_LENGTH} characters</span>
+            <span>
+              {descriptionLength.toLocaleString("en-IE")} /{" "}
+              {FORMATTED_DESCRIPTION_MAX_LENGTH} characters
+            </span>
+          </div>
           {fieldError && (
             <p className="field-error" id="description-error" role="alert">
               {fieldError}
             </p>
           )}
-          <button type="submit" disabled={isLoading}>
+          <button
+            type="submit"
+            disabled={isLoading || isDescriptionTooLong}
+          >
             {isLoading ? "Generating..." : "Generate suggestions"}
           </button>
         </form>

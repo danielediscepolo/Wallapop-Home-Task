@@ -19,7 +19,7 @@ such as `PS5` can be useful, while a longer sentence can still be meaningless.
 | Seller input or action | Intended behaviour |
 | --- | --- |
 | Empty or whitespace-only description | Return `INVALID_DESCRIPTION`; do not call the model. Implemented in the backend. |
-| Description over the maximum length | Preserve the text, show the limit clearly, and do not allow generation until corrected. |
+| Description over 1,000 characters | Preserve the text, show the limit and count clearly, and do not allow generation until corrected. |
 | Short but identifiable product | Generate suggestions; use the limited-information tip when appropriate. |
 | Identifiable product missing relevant details | Generate all suggestions and warn that the price is especially approximate. |
 | Meaningless or unrelated text | Do not generate a fabricated result; ask for a clearer item description. |
@@ -33,7 +33,7 @@ such as `PS5` can be useful, while a longer sentence can still be meaningless.
 | Several unrelated or ambiguous items | Ask the seller to clarify what the listing should represent. |
 | Contradictory product details | Avoid pretending the estimate is precise; prefer the limited-information outcome. |
 | Repeated generate clicks | Accept only one request while generation is in progress. |
-| Description edited after generation | Existing suggestions must not silently appear current; exact UX remains open. |
+| Description edited after generation | Remove the existing suggestions immediately while preserving the edited description. |
 
 ## Implementation guardrails
 

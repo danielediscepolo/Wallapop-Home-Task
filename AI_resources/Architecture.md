@@ -266,6 +266,13 @@ The request uses `temperature: 0.5` and a fixed `seed: 42` to reduce variation
 between identical descriptions. The seed is treated as best-effort reproducibility,
 not a guarantee that outputs remain identical across provider or model changes.
 
+The prompt asks for concise factual titles and search tags that complement the
+title rather than mechanically splitting it. It preserves compound product
+identities, discourages repeated concepts and bare attribute values, and requires
+one output language. These are semantic quality instructions, not parser rules:
+rejecting imperfect but usable tags would turn a quality limitation into an HTTP
+error, while an automatic second model call would add latency and provider usage.
+
 Price ranges are model estimates based on general learned knowledge, not live
 Wallapop listings or a comparable-sales data source. The prompt avoids claiming
 live market data, `limited` requests a wider range, and the UI labels every range
@@ -289,16 +296,20 @@ already-decoded unknown value and always returns the shared application type.
 
 Malformed JSON or a structurally invalid value raises a focused
 `InvalidModelOutputError`. The Express route maps only that known failure to HTTP
-502 and the stable `INVALID_MODEL_OUTPUT` code; unrelated failures continue to
-the normal Express error path so future provider errors are not accidentally
-misclassified.
+502 and the stable `INVALID_MODEL_OUTPUT` code. Other failures during generation
+are treated as temporary model unavailability and mapped to HTTP 503 with the
+stable `MODEL_UNAVAILABLE` code. Provider details are not exposed to the seller.
+This deliberately avoids a provider-error hierarchy while there is only one real
+provider; the mapping can become more specific if another failure source enters
+the generation flow.
 
 ## Other open decisions
 
 - the remainder of the HTTP response contract beyond the first success response
   and the `INVALID_DESCRIPTION` error;
 - runtime validation approach;
-- application and provider error mapping;
+- more granular provider error mapping if the generation flow gains other
+  failure sources;
 - frontend component-testing helper and exact later test boundaries;
 - development and production scripts.
 
@@ -319,3 +330,9 @@ rule rejects a missing, non-string, empty, or whitespace-only `description` with
 HTTP 400 before model access. This placement keeps HTTP input concerns out of the
 generation function; revisit the validation mechanism only if the request shape
 grows enough to justify a schema library or dedicated module.
+
+The description limit is 1,000 Unicode characters. A constant in the shared
+contract keeps frontend guidance and backend enforcement aligned. The frontend
+preserves overlong input, shows its character count, and prevents submission;
+the backend remains the source of truth and returns `DESCRIPTION_TOO_LONG` with
+HTTP 400 without calling the model.

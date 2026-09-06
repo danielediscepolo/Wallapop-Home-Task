@@ -116,6 +116,16 @@ h1 {
   border-color: #c83b4c;
 }
 
+.description-meta {
+  display: flex;
+  align-self: stretch;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 7px;
+  color: #65757d;
+  font-size: 0.8rem;
+}
+
 .field-error,
 .request-error {
   margin: 8px 0 0;
@@ -146,7 +156,7 @@ h1 {
 }
 
 .description-form button:disabled {
-  cursor: wait;
+  cursor: not-allowed;
   opacity: 0.65;
 }
 
@@ -230,6 +240,14 @@ h1 {
 
   .description-form button {
     width: 100%;
+  }
+
+  .description-meta {
+    align-items: flex-end;
+  }
+
+  .description-meta span:last-child {
+    text-align: right;
   }
 
   .result {

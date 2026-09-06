@@ -49,6 +49,24 @@ describe("POST /api/listing-suggestions", () => {
     expect(generateModelOutput).not.toHaveBeenCalled();
   });
 
+  it("rejects a description over 1,000 characters without calling the model", async () => {
+    const generateModelOutput = vi.fn(async () => undefined);
+    const app = createApp(generateModelOutput);
+
+    const response = await request(app)
+      .post("/api/listing-suggestions")
+      .send({ description: "a".repeat(1001) });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      error: {
+        code: "DESCRIPTION_TOO_LONG",
+        message: "Description must be 1,000 characters or fewer.",
+      },
+    });
+    expect(generateModelOutput).not.toHaveBeenCalled();
+  });
+
   it("returns a stable error when the model output is invalid", async () => {
     const app = createApp(invalidMockModel);
 
@@ -61,6 +79,25 @@ describe("POST /api/listing-suggestions", () => {
       error: {
         code: "INVALID_MODEL_OUTPUT",
         message: "We couldn't generate reliable suggestions. Please try again.",
+      },
+    });
+  });
+
+  it("returns a stable error when the model is unavailable", async () => {
+    const generateModelOutput = vi.fn(async () => {
+      throw new Error("Provider rate limit exceeded");
+    });
+    const app = createApp(generateModelOutput);
+
+    const response = await request(app)
+      .post("/api/listing-suggestions")
+      .send({ description: "Renault Twingo" });
+
+    expect(response.status).toBe(503);
+    expect(response.body).toEqual({
+      error: {
+        code: "MODEL_UNAVAILABLE",
+        message: "Could not generate suggestions. Please try again.",
       },
     });
   });

@@ -1,5 +1,6 @@
 import express from "express";
 
+import { DESCRIPTION_MAX_LENGTH } from "../shared/listingSuggestions";
 import { generateListingSuggestions } from "./generateListingSuggestions";
 import type { GenerateModelOutput } from "./modelGateway";
 import { InvalidModelOutputError } from "./parseListingSuggestions";
@@ -8,7 +9,7 @@ export function createApp(generateModelOutput: GenerateModelOutput) {
   const app = express();
 
   app.use(express.json());
-  app.post("/api/listing-suggestions", async (request, response, next) => {
+  app.post("/api/listing-suggestions", async (request, response) => {
     const description = request.body?.description;
 
     if (typeof description !== "string" || description.trim().length === 0) {
@@ -16,6 +17,16 @@ export function createApp(generateModelOutput: GenerateModelOutput) {
         error: {
           code: "INVALID_DESCRIPTION",
           message: "Description is required.",
+        },
+      });
+      return;
+    }
+
+    if (Array.from(description).length > DESCRIPTION_MAX_LENGTH) {
+      response.status(400).json({
+        error: {
+          code: "DESCRIPTION_TOO_LONG",
+          message: `Description must be ${DESCRIPTION_MAX_LENGTH.toLocaleString("en-IE")} characters or fewer.`,
         },
       });
       return;
@@ -40,7 +51,12 @@ export function createApp(generateModelOutput: GenerateModelOutput) {
         return;
       }
 
-      next(error);
+      response.status(503).json({
+        error: {
+          code: "MODEL_UNAVAILABLE",
+          message: "Could not generate suggestions. Please try again.",
+        },
+      });
     }
   });
 

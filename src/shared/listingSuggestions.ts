@@ -1,3 +1,5 @@
+export const DESCRIPTION_MAX_LENGTH = 1000;
+
 export type PriceRange = {
   min: number;
   max: number;

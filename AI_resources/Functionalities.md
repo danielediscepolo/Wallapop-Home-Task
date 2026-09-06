@@ -41,10 +41,18 @@ The first working version should include only:
 
 Implementation progress: the minimal React interface now covers the description
 field, generate action, loading state, blank-input feedback, and rendering of a
-complete mocked result. Copying, editing, regeneration, limited-information
-guidance, and malformed-model handling remain later increments.
+complete mocked result. It also removes previous suggestions when the description
+changes or a new request starts, so stale output is never presented as current.
+Descriptions have a visible 1,000-character limit enforced by both frontend and
+backend without silently truncating the seller's text. Copying, editing, and
+explicit regeneration controls remain later increments.
 
 ## Expected product outcomes
+
+Generated titles should be concise and factual, combining the product identity
+with useful distinguishing details supplied by the seller. Tags should preserve
+the main identity while adding meaningful category terms, search phrases, or
+verified characteristics instead of merely splitting the title into words.
 
 ### Complete information
 
@@ -105,9 +113,7 @@ should not build a generic category or form system before one is needed.
 
 ## Still open
 
-- the exact character limit for the description;
 - the exact wording of guidance and limited-information tips;
 - whether output language follows the input language;
-- what happens to existing suggestions when the description changes;
 - the precise edit and regeneration interactions;
 - the API contract, validation rules, stack, provider, and test strategy.

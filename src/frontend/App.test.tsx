@@ -2,7 +2,7 @@
 
 import "@testing-library/jest-dom/vitest";
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -26,6 +26,31 @@ describe("Listing Assistant", () => {
     );
 
     expect(screen.getByText("Description is required.")).toBeVisible();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("preserves an overlong description and prevents generation", () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+
+    const description = screen.getByRole("textbox", {
+      name: "Describe your item",
+    });
+    const overlongDescription = "a".repeat(1001);
+    fireEvent.change(description, {
+      target: { value: overlongDescription },
+    });
+
+    expect(description).toHaveValue(overlongDescription);
+    expect(screen.getByText("1,001 / 1,000 characters")).toBeVisible();
+    expect(
+      screen.getByText("Description must be 1,000 characters or fewer."),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Generate suggestions" }),
+    ).toBeDisabled();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -166,6 +191,84 @@ describe("Listing Assistant", () => {
       ),
     ).toBeVisible();
     expect(description).toHaveValue("Renault Twingo");
+    expect(screen.queryByText("Suggested listing")).not.toBeInTheDocument();
+  });
+
+  it("removes previous suggestions when the description changes", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        status: "complete",
+        title: "Used iPhone 13",
+        tags: ["Apple", "iPhone", "smartphone"],
+        priceRange: {
+          min: 300,
+          max: 450,
+          currency: "EUR",
+        },
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+
+    const description = screen.getByRole("textbox", {
+      name: "Describe your item",
+    });
+    await user.type(description, "iPhone 13");
+    await user.click(
+      screen.getByRole("button", { name: "Generate suggestions" }),
+    );
+    expect(
+      await screen.findByRole("heading", { name: "Used iPhone 13" }),
+    ).toBeVisible();
+
+    await user.type(description, " with 128 GB");
+
+    expect(screen.queryByText("Suggested listing")).not.toBeInTheDocument();
+  });
+
+  it("removes previous suggestions while generating again", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status: "complete",
+          title: "Used iPhone 13",
+          tags: ["Apple", "iPhone", "smartphone"],
+          priceRange: {
+            min: 300,
+            max: 450,
+            currency: "EUR",
+          },
+        }),
+      })
+      .mockImplementationOnce(() => new Promise(() => undefined));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<App />);
+
+    await user.type(
+      screen.getByRole("textbox", { name: "Describe your item" }),
+      "iPhone 13",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Generate suggestions" }),
+    );
+    expect(
+      await screen.findByRole("heading", { name: "Used iPhone 13" }),
+    ).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: "Generate suggestions" }),
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Generating..." }),
+    ).toBeDisabled();
     expect(screen.queryByText("Suggested listing")).not.toBeInTheDocument();
   });
 });

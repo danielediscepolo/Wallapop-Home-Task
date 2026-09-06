@@ -60,10 +60,22 @@ describe("createGroqModel", () => {
     expect(instructions).toContain(
       "price range is wider because information is missing",
     );
-    expect(instructions).toContain("same predominant language");
     expect(instructions).toContain('"currency":"EUR"');
     expect(instructions).toContain("recognizable product or product category");
     expect(instructions).toContain('such as "iPhone" or "Renault Twingo"');
     expect(instructions).toContain("Never ask the seller for an asking price");
+    expect(instructions).toContain(
+      "product type, brand or model, and useful distinguishing details",
+    );
+    expect(instructions).toContain("complement the title");
+    expect(instructions).toContain("Do not merely split the title");
+    expect(instructions).toContain("a buyer might search for");
+    expect(instructions).toContain("bare attribute values");
+    expect(instructions).toContain("brand alone");
+    expect(instructions).toContain("auto del 2012");
+    expect(instructions).toContain(
+      "must use the seller's predominant language",
+    );
+    expect(instructions).toContain("Never mix languages");
   });
 });
