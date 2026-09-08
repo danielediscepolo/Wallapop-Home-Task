@@ -200,7 +200,7 @@ npm run typecheck
 npm run build
 ```
 
-The test suite focuses on behaviour rather than coverage percentage, including:
+I selected these tests because they protect the boundaries where failures would most directly affect the seller experience: user input, untrusted model responses, provider failures, and asynchronous UI state.
 
 * generation flow
 * runtime model validation
