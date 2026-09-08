@@ -31,7 +31,7 @@ describe("listing generation flow", () => {
       );
 
       const result = await requestListingSuggestions(
-        "Renault Twingo 2018, 70000 km, in good condition",
+        "Vintage leather jacket, worn once, size M",
       );
 
       expect(result).toMatchObject({

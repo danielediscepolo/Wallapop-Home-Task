@@ -3,11 +3,11 @@ import type { GenerateModelOutput } from "./modelGateway";
 export const validMockModel: GenerateModelOutput = async () =>
   JSON.stringify({
     status: "complete",
-    title: "Renault Twingo 2018 in good condition",
-    tags: ["Renault Twingo", "city car", "2018 vehicle"],
+    title: "Vintage leather jacket size M, worn once",
+    tags: ["vintage leather jacket", "size M jacket", "leather outerwear"],
     priceRange: {
-      min: 5_000,
-      max: 7_000,
+      min: 60,
+      max: 120,
       currency: "EUR",
     },
   });
@@ -24,13 +24,13 @@ export const limitedMockModel: GenerateModelOutput = async () =>
       max: 5_000,
       currency: "EUR",
     },
-    tip: "Add year, mileage and condition for a more accurate estimate.",
+    tip: "This price range is wider because year, mileage, and condition are missing. Add those details for a more accurate estimate.",
   });
 
 export const needsMoreInformationMockModel: GenerateModelOutput = async () =>
   JSON.stringify({
     status: "needs_more_information",
-    message: "Describe the item you want to sell more clearly.",
+    message: "Describe the specific item you want to sell so we can suggest a title, search tags, and price range.",
   });
 
 export function selectMockModel(

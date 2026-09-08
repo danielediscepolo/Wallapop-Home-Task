@@ -9,9 +9,24 @@ import {
 } from "./mockModel";
 
 describe("selectMockModel", () => {
-  it("uses the valid scenario by default", () => {
+  it("uses the valid scenario by default", async () => {
     expect(selectMockModel(undefined)).toBe(validMockModel);
     expect(selectMockModel("valid")).toBe(validMockModel);
+
+    const rawOutput = await validMockModel({
+      description: "Vintage leather jacket, worn once, size M",
+    });
+
+    expect(JSON.parse(String(rawOutput))).toEqual({
+      status: "complete",
+      title: "Vintage leather jacket size M, worn once",
+      tags: [
+        "vintage leather jacket",
+        "size M jacket",
+        "leather outerwear",
+      ],
+      priceRange: { min: 60, max: 120, currency: "EUR" },
+    });
   });
 
   it("selects the configured invalid scenario", () => {
@@ -21,7 +36,9 @@ describe("selectMockModel", () => {
   it("selects the configured limited scenario", async () => {
     expect(selectMockModel("limited")).toBe(limitedMockModel);
 
-    const rawOutput = await limitedMockModel({ description: "" });
+    const rawOutput = await limitedMockModel({
+      description: "Renault Twingo",
+    });
     expect(typeof rawOutput).toBe("string");
 
     if (typeof rawOutput !== "string") {
@@ -33,7 +50,7 @@ describe("selectMockModel", () => {
     expect(output).toMatchObject({
       status: "limited",
       priceRange: { min: 1_500, max: 5_000, currency: "EUR" },
-      tip: expect.any(String),
+      tip: "This price range is wider because year, mileage, and condition are missing. Add those details for a more accurate estimate.",
     });
   });
 
@@ -42,7 +59,9 @@ describe("selectMockModel", () => {
       needsMoreInformationMockModel,
     );
 
-    const rawOutput = await needsMoreInformationMockModel({ description: "" });
+    const rawOutput = await needsMoreInformationMockModel({
+      description: "Something from my garage",
+    });
     expect(typeof rawOutput).toBe("string");
 
     if (typeof rawOutput !== "string") {
@@ -53,7 +72,8 @@ describe("selectMockModel", () => {
 
     expect(output).toEqual({
       status: "needs_more_information",
-      message: expect.any(String),
+      message:
+        "Describe the specific item you want to sell so we can suggest a title, search tags, and price range.",
     });
   });
 

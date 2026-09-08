@@ -11,7 +11,7 @@ describe("POST /api/listing-suggestions", () => {
     const response = await request(app)
       .post("/api/listing-suggestions")
       .send({
-        description: "Renault Twingo 2018, 70000 km, in good condition",
+        description: "Vintage leather jacket, worn once, size M",
       });
 
     expect(response.status).toBe(200);

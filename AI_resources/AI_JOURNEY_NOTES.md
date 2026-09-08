@@ -975,3 +975,17 @@ parser, provider adapter, and HTTP app because each isolates behaviour already
 used by tests. Collapsing them would reduce file count but mix trust, transport,
 and provider concerns. We removed the obsolete frontend `.gitkeep` and corrected
 stale architecture notes; no speculative refactor or new tooling was added.
+
+## 2026-09-08 - Aligning deterministic mock fixtures with reviewer demos
+
+The clean-machine reviewer simulation confirmed that mock mode worked without an
+environment file or Groq key, but it also exposed a presentation mismatch: the
+brief's vintage-jacket input returned the fixed Renault fixture. This was
+technically correct for a deterministic mock but could look broken to a reviewer.
+
+We kept scenario selection exclusively configuration-driven and did not inspect
+or classify the description. Only the static fixtures, existing test inputs, and
+README examples changed. The valid scenario now uses the brief's vintage leather
+jacket, while limited and clarification retain the Renault Twingo and vague
+garage examples. This improves demo coherence with no new runtime branch or
+abstraction.
