@@ -14,4 +14,4 @@ One area I do not fully understand is the Groq integration as a whole. I underst
 
 With another four hours, I would mainly refine and evaluate the prompts to improve the consistency of prices, tags, and incomplete-input handling, together with a few UI refinements rather than adding more features.
 
-**P.S.** A more detailed record of these decisions, discussions, and AI interactions is available in my development log, `AI_JOURNEY_NOTES.md`, which I maintained throughout the project.
+**P.S.** A more detailed record of these decisions, discussions, and AI interactions is available in my development log, [`AI_JOURNEY_NOTES.md`](AI_resources/AI_JOURNEY_NOTES.md), which I maintained throughout the project.
